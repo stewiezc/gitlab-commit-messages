@@ -15,6 +15,11 @@ type commit struct {
 	Created_at string `json:"created_at"`
 }
 
+type messages struct {
+	Message    string `json:"message"`
+	Created_at string `json:"-"`
+}
+
 func main() {
 	// discover flags
 	debug := flag.Bool("d", false, "some debug output")
@@ -40,9 +45,16 @@ func main() {
 		log.Fatal(getCommitErr)
 	}
 	startDate := created_at
-	fmt.Println(startDate)
 
 	// get list of commits since the startDate
+
+	returnCommits, getListErr := getListCommits(*projectId, apiKey, startDate)
+	if getListErr != nil {
+		log.Fatal(getListErr)
+	}
+	jsonCommits, _ := json.Marshal(returnCommits)
+	s := string(jsonCommits)
+	fmt.Println(s)
 }
 
 func getSingleCommit(hash string, projectId string, apiKey string) (string, string, error) {
@@ -63,15 +75,42 @@ func getSingleCommit(hash string, projectId string, apiKey string) (string, stri
 		log.Fatal(readErr)
 	}
 
-	result := commit{}
-	jsonErr := json.Unmarshal(body, &result)
+	var commit commit
+	jsonErr := json.Unmarshal(body, &commit)
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
 
-	return result.Message, result.Created_at, nil
+	return commit.Message, commit.Created_at, nil
 }
 
-func getListCommits() {
-	return
+func getListCommits(projectId string, apiKey string, startDate string) ([]commit, error) {
+	client := &http.Client{}
+	uri := fmt.Sprintf("https://gitlab.com/api/v4/projects/%v/repository/commits?since=%v", projectId, startDate)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Add("PRIVATE-TOKEN", apiKey)
+	resp, getErr := client.Do(req)
+	if getErr != nil {
+		log.Fatal(getErr)
+	}
+
+	body, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		log.Fatal(readErr)
+	}
+
+	var commits []commit
+	jsonErr := json.Unmarshal([]byte(body), &commits)
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+
+	//for l := range commits {
+	//	fmt.Printf("message: %vcreated_at:%v\n", commits[l].Message, commits[l].Created_at)
+	//}
+
+	return commits, nil
 }
