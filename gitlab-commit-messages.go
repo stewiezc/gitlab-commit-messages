@@ -15,11 +15,6 @@ type commit struct {
 	Created_at string `json:"created_at"`
 }
 
-type messages struct {
-	Message    string `json:"message"`
-	Created_at string `json:"-"`
-}
-
 func main() {
 	// discover flags
 	debug := flag.Bool("d", false, "some debug output")
