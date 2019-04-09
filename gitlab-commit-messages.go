@@ -41,9 +41,16 @@ func main() {
 	}
 	startDate := created_at
 
+	// get the end date for end commit
+	_, endCreated_at, endGetCommitErr := getSingleCommit(*endHash, *projectId, apiKey)
+	if endGetCommitErr != nil {
+		log.Fatal(endGetCommitErr)
+	}
+	endDate := endCreated_at
+
 	// get list of commits since the startDate
 
-	returnCommits, getListErr := getListCommits(*projectId, apiKey, startDate)
+	returnCommits, getListErr := getListCommits(*projectId, apiKey, startDate, endDate)
 	if getListErr != nil {
 		log.Fatal(getListErr)
 	}
@@ -79,9 +86,9 @@ func getSingleCommit(hash string, projectId string, apiKey string) (string, stri
 	return commit.Message, commit.Created_at, nil
 }
 
-func getListCommits(projectId string, apiKey string, startDate string) ([]commit, error) {
+func getListCommits(projectId string, apiKey string, startDate string, endDate string) ([]commit, error) {
 	client := &http.Client{}
-	uri := fmt.Sprintf("https://gitlab.com/api/v4/projects/%v/repository/commits?since=%v", projectId, startDate)
+	uri := fmt.Sprintf("https://gitlab.com/api/v4/projects/%v/repository/commits?since=%v&until=%v", projectId, startDate, endDate)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		log.Fatal(err)
