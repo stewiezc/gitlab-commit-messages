@@ -110,9 +110,5 @@ func getListCommits(projectId string, apiKey string, startDate string, endDate s
 		log.Fatal(jsonErr)
 	}
 
-	//for l := range commits {
-	//	fmt.Printf("message: %vcreated_at:%v\n", commits[l].Message, commits[l].Created_at)
-	//}
-
 	return commits, nil
 }
